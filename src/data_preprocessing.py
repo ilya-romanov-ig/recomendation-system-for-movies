@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 
 def create_rating_matrix(ratings_df: pd.DataFrame):
     user_ids = ratings_df['userId'].unique()
@@ -71,3 +72,24 @@ def train_test_split_by_user(rating_matrix : csr_matrix, test_size=0.2, random_s
             test_matrix = csr_matrix(rating_matrix.shape)
 
     return train_matrix, test_matrix
+
+def eval_model(model, test_matrix):
+    actual_rating = []
+    predicted_rating = []
+
+    rows, cols = test_matrix.shape
+
+    for row in range(rows):
+        for col in range(cols):
+            rating = test_matrix[row, col]
+            if rating > 0:
+                pred_rating = model._predict_rating(row, col)
+                predicted_rating.append(pred_rating)
+                actual_rating.append(rating)
+
+    metrics = {
+        'rmse': root_mean_squared_error(actual_rating, predicted_rating),
+        'mae': mean_absolute_error(actual_rating, predicted_rating)
+    }
+
+    return metrics, actual_rating, predicted_rating
